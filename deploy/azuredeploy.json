@@ -70,9 +70,23 @@
   "variables": {
     "truckAppPlanName": "truckAppServicePlan",
     "truckAppName": "[concat('webApp', uniqueString(resourceGroup().id))]",
+    "appInsightsName": "truckAppInsights",
     "sqlserverName": "[concat('truckappsql', uniqueString(resourceGroup().id))]"
   },
   "resources": [
+    {
+      "name": "[variables('appInsightsName')]",
+      "type": "Microsoft.Insights/components",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2014-08-01",
+      "dependsOn": [],
+      "tags": {
+        "displayName": "Component appInsights"
+      },
+      "properties": {
+        "applicationId": "[resourceId('Microsoft.Web/sites', variables('truckAppName'))]"
+      }
+    },
     {
       "name": "[variables('truckAppPlanName')]",
       "type": "Microsoft.Web/serverfarms",
@@ -101,7 +115,23 @@
       },
       "properties": {
         "name": "[variables('truckAppName')]",
-        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('truckAppPlanName'))]"
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('truckAppPlanName'))]",
+        "siteConfig": {
+          "AlwaysOn": true,
+          "appSettings": [
+            {
+              "name": "APPLICATION_INSIGHTS_IKEY",
+              "value": "[reference(resourceId('Microsoft.Insights/components', variables('appInsightsName')), '2014-04-01').InstrumentationKey]"
+            }
+          ],
+          "connectionStrings": [
+            {
+              "name": "TruckInsuranceDbContext",
+              "ConnectionString": "[concat('Server=tcp:', variables('sqlserverName'), '.database.windows.net;Database=', parameters('databaseName'), ';User ID=', parameters('administratorLogin'), '@', variables('sqlserverName'), ';Password=', parameters('administratorLoginPassword'), ';Trusted_Connection=False;Encrypt=True;')]",
+              "type": "SQLAzure"
+            }
+          ]
+        }
       }
     },
     {
@@ -122,7 +152,7 @@
           "name": "AllowAllWindowsAzureIps",
           "type": "firewallrules",
           "location": "[resourceGroup().location]",
-          "apiVersion": "2014-04-01-preview",
+          "apiVersion": "2014-04-01",
           "dependsOn": [
             "[resourceId('Microsoft.Sql/servers', variables('sqlserverName'))]"
           ],
