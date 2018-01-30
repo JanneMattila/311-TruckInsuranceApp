@@ -13,10 +13,15 @@ if ((Get-AzureRmResourceGroup -Name $ResourceGroupName -Location $Location -Erro
     New-AzureRmResourceGroup -Name $ResourceGroupName -Location $Location -Verbose
 }
 
+# Create additional parameters that we pass to the template deployment
+$additionalParameters = New-Object -TypeName hashtable
+$additionalParameters['truckAppPlanSkuName'] = "B3"
+
 $result = New-AzureRmResourceGroupDeployment `
     -ResourceGroupName $ResourceGroupName `
     -TemplateFile $Template `
     -TemplateParameterFile $TemplateParameters `
-    -Verbose
+    @additionalParameters `
+	-Verbose
 
 $result
