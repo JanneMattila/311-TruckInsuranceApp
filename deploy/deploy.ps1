@@ -3,7 +3,7 @@ Param (
     [string] $Location = "North Europe",
     [string] $Template = "$PSScriptRoot\azuredeploy.json",
     [string] $TemplateParameters = "$PSScriptRoot\azuredeploy.parameters.json",
-	[string] $PricingTier = "B1"
+    [string] $PricingTier = "B1"
 )
 
 $ErrorActionPreference = "Stop"
