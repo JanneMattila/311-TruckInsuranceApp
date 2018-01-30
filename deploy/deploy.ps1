@@ -55,3 +55,14 @@ $result = New-AzureRmResourceGroupDeployment `
 	-Verbose
 
 $result
+
+if ($result.Outputs -eq $null -or
+	$result.Outputs.webAppName -eq $null -or
+    $result.Outputs.webAppUri -eq $null)
+{
+    Throw "Template deployment didn't return web app information correctly and therefore deployment is cancelled."
+}
+
+$webAppName = $result.Outputs.webAppName.value
+$webAppUri = $result.Outputs.webAppUri.value
+Write-Host "##vso[task.setvariable variable=Custom.WebAppName;]$webAppName"
