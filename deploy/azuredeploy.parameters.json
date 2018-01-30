@@ -4,6 +4,12 @@
   "parameters": {
     "truckAppPlanCapacity": {
       "value": 1
+    },
+    "databaseServerEdition": {
+      "value": "Basic"
+    },
+    "databaseServerRequestedServiceObjectiveName": {
+      "value": "Basic"
     }
   }
 }

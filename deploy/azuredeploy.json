@@ -29,11 +29,48 @@
       "metadata": {
         "description": "Describes App Service Plan's instance count"
       }
+    },
+    "databaseName": {
+      "type": "string"
+    },
+    "administratorLogin": {
+      "type": "string"
+    },
+    "administratorLoginPassword": {
+      "type": "securestring"
+    },
+    "databaseCollation": {
+      "type": "string",
+      "defaultValue": "SQL_Latin1_General_CP1_CI_AS"
+    },
+    "databaseServerEdition": {
+      "type": "string",
+      "allowedValues": [
+        "Basic",
+        "Standard",
+        "Premium"
+      ]
+    },
+    "databaseServerRequestedServiceObjectiveName": {
+      "type": "string",
+      "allowedValues": [
+        "Basic",
+        "S0",
+        "S1",
+        "S2",
+        "P1",
+        "P2",
+        "P3"
+      ],
+      "metadata": {
+        "description": "Describes the performance level for Edition"
+      }
     }
   },
   "variables": {
     "truckAppPlanName": "truckAppServicePlan",
-    "webAppName": "[concat('webApp', uniqueString(resourceGroup().id))]"
+    "webAppName": "[concat('webApp', uniqueString(resourceGroup().id))]",
+    "sqlserverName": "[concat('truckappsql', uniqueString(resourceGroup().id))]"
   },
   "resources": [
     {
@@ -66,6 +103,53 @@
         "name": "[variables('webAppName')]",
         "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('truckAppPlanName'))]"
       }
+    },
+    {
+      "name": "[variables('sqlserverName')]",
+      "type": "Microsoft.Sql/servers",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2014-04-01",
+      "dependsOn": [],
+      "tags": {
+        "displayName": "sqlserver"
+      },
+      "properties": {
+        "administratorLogin": "[parameters('administratorLogin')]",
+        "administratorLoginPassword": "[parameters('administratorLoginPassword')]"
+      },
+      "resources": [
+        {
+          "name": "AllowAllWindowsAzureIps",
+          "type": "firewallrules",
+          "location": "[resourceGroup().location]",
+          "apiVersion": "2014-04-01-preview",
+          "dependsOn": [
+            "[resourceId('Microsoft.Sql/servers', variables('sqlserverName'))]"
+          ],
+          "properties": {
+            "startIpAddress": "0.0.0.0",
+            "endIpAddress": "0.0.0.0"
+          }
+        },
+        {
+          "name": "[parameters('databaseName')]",
+          "type": "databases",
+          "location": "[resourceGroup().location]",
+          "apiVersion": "2014-04-01",
+          "dependsOn": [
+            "[resourceId('Microsoft.Sql/servers', variables('sqlserverName'))]"
+          ],
+          "tags": {
+            "displayName": "TruckInsurance"
+          },
+          "properties": {
+            "collation": "[parameters('databaseCollation')]",
+            "edition": "[parameters('databaseServerEdition')]",
+            "maxSizeBytes": "1073741824",
+            "requestedServiceObjectiveName": "[parameters('databaseServerRequestedServiceObjectiveName')]"
+          }
+        }
+      ]
     }
   ],
   "outputs": {
