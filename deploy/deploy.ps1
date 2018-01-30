@@ -16,6 +16,23 @@ Param (
 
 $ErrorActionPreference = "Stop"
 
+$date = (Get-Date).ToString("yyyy-MM-dd-HH-mm-ss")
+$deploymentName = "Local-$date"
+
+if ([string]::IsNullOrEmpty($env:RELEASE_DEFINITIONNAME))
+{
+    Write-Host (@"
+Not executing inside VSTS Release Management.
+Make sure you have done "Login-AzureRmAccount" and
+"Select-AzureRmSubscription -SubscriptionName name"
+so that script continues to work correctly for you.
+"@)
+}
+else
+{
+	$deploymentName = $env:RELEASE_RELEASENAME
+}
+
 if ((Get-AzureRmResourceGroup -Name $ResourceGroupName -Location $Location -ErrorAction SilentlyContinue) -eq $null)
 {
     Write-Warning "Resource group '$ResourceGroupName' doesn't exist and it will be created."
@@ -30,6 +47,7 @@ $additionalParameters['administratorLogin'] = $DatabaseAdminUser
 $additionalParameters['administratorLoginPassword'] = $DatabaseAdminPassword
 
 $result = New-AzureRmResourceGroupDeployment `
+	-DeploymentName $deploymentName `
     -ResourceGroupName $ResourceGroupName `
     -TemplateFile $Template `
     -TemplateParameterFile $TemplateParameters `
